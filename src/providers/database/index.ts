@@ -1,2 +1,2 @@
-export { connectDatabase } from "./connection";
+export { mongoConnection } from "./connection";
 export * from "../../model";

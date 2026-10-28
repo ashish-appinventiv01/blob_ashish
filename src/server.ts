@@ -1,18 +1,26 @@
 import { app } from "./app";
 import { config } from "./constants/config";
-import { connectDatabase } from "./providers/database";
+import { mongoConnection } from "./providers/database";
+import { redisConnection } from "./providers/redis";
 
-async function start(): Promise<void> {
-  await connectDatabase();
+class Server {
+  constructor() {
+    this.start().catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : "Failed to start server";
+      console.error(message);
+      process.exit(1);
+    });
+  }
 
-  app.listen(config.port, () => {
-    console.log(`Server listening on port ${config.port}`);
-    console.log(`Connected to database ${config.dbName}`);
-  });
+  private async start(): Promise<void> {
+    await mongoConnection.initConnection();
+    await redisConnection.initConnection();
+
+    app.listen(config.port, () => {
+      console.log(`Server listening on port ${config.port}`);
+      console.log(`Connected to database ${config.dbName}`);
+    });
+  }
 }
 
-start().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : "Failed to start server";
-  console.error(message);
-  process.exit(1);
-});
+new Server();

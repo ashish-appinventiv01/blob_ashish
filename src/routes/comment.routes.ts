@@ -1,9 +1,17 @@
 import { Router } from "express";
-import { deleteComment } from "../Modules/comment/comment.controller";
-import { requireAuth } from "../middlewares/auth";
+import { commentController } from "../Modules/comment/comment.controller";
+import { authMiddleware } from "../middlewares/auth";
 
-const commentRouter = Router();
+class CommentRoutes {
+  public commentRoute = Router();
 
-commentRouter.delete("/:id", requireAuth, deleteComment);
+  constructor() {
+    this.initializeRoutes();
+  }
 
-export default commentRouter;
+  private initializeRoutes() {
+    this.commentRoute.delete("/:id", authMiddleware.requireAuth, commentController.deleteComment);
+  }
+}
+
+export const commentRoutes = new CommentRoutes().commentRoute;

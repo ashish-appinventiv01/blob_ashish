@@ -1,15 +1,21 @@
 import { MESSAGES } from "../../constants/messages";
-import { updateUserName } from "./user.repository";
+import { cache, redisConfig } from "../../providers/redis";
 import { AppError } from "../../utils/AppError";
-import { toPublicUser } from "../../utils/publicUser";
+import { publicUser } from "../../utils/publicUser";
 import { PublicUser, UpdateNameInput } from "./user.interface";
+import { userRepository } from "./user.repository";
 
-export async function updateName(input: UpdateNameInput): Promise<PublicUser> {
-  const user = await updateUserName(input.userId, input.name);
+class UserService {
+  async updateName(input: UpdateNameInput): Promise<PublicUser> {
+    const user = await userRepository.updateUserName(input.userId, input.name);
 
-  if (!user) {
-    throw new AppError(MESSAGES.userNotFound, 404);
+    if (!user) {
+      throw new AppError(MESSAGES.userNotFound, 404);
+    }
+
+    await cache.delKeys([redisConfig.keys.user(input.userId)]);
+    return publicUser.toPublicUser(user);
   }
-
-  return toPublicUser(user);
 }
+
+export const userService = new UserService();

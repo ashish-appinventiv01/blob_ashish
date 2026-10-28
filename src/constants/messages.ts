@@ -6,6 +6,7 @@ export const MESSAGES = {
   invalidId: "Invalid identifier",
   duplicate: "A record with that value already exists",
   invalidCredentials: "Invalid email or password",
+  tooManyLoginAttempts: "Too many login attempts. Try again in",
   emailTaken: "An account with this email already exists",
   loggedOut: "Logged out",
   nameLength: "Name must be between 2 and 50 characters",

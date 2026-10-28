@@ -10,12 +10,16 @@ type UserRecord = {
   updatedAt: Date;
 };
 
-export function toPublicUser(user: UserRecord): PublicUser {
-  return {
-    id: user._id.toString(),
-    name: user.name,
-    email: user.email,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  };
+class PublicUserMapper {
+  toPublicUser(user: UserRecord): PublicUser {
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
 }
+
+export const publicUser = new PublicUserMapper();

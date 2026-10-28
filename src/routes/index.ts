@@ -1,18 +1,26 @@
 import { Router } from "express";
-import authRouter from "./auth.routes";
-import commentRouter from "./comment.routes";
-import healthRouter from "./health.routes";
-import postRouter from "./post.routes";
-import statsRouter from "./stats.routes";
-import userRouter from "./user.routes";
+import { authRoutes } from "./auth.routes";
+import { commentRoutes } from "./comment.routes";
+import { healthRoutes } from "./health.routes";
+import { postRoutes } from "./post.routes";
+import { statsRoutes } from "./stats.routes";
+import { userRoutes } from "./user.routes";
 
-const apiRouter = Router();
+class ApiRoutes {
+  public apiRoute = Router();
 
-apiRouter.use("/api", healthRouter);
-apiRouter.use("/api/auth", authRouter);
-apiRouter.use("/api/posts", postRouter);
-apiRouter.use("/api/comments", commentRouter);
-apiRouter.use("/api/stats", statsRouter);
-apiRouter.use("/api/users", userRouter);
+  constructor() {
+    this.initializeRoutes();
+  }
 
-export default apiRouter;
+  private initializeRoutes() {
+    this.apiRoute.use("/api", healthRoutes);
+    this.apiRoute.use("/api/auth", authRoutes);
+    this.apiRoute.use("/api/posts", postRoutes);
+    this.apiRoute.use("/api/comments", commentRoutes);
+    this.apiRoute.use("/api/stats", statsRoutes);
+    this.apiRoute.use("/api/users", userRoutes);
+  }
+}
+
+export const apiRoutes = new ApiRoutes().apiRoute;

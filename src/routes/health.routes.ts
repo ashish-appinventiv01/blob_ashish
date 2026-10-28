@@ -1,8 +1,16 @@
 import { Router } from "express";
 import { healthController } from "../Modules/health/health.controller";
 
-const healthRouter = Router();
+class HealthRoutes {
+  public healthRoute = Router();
 
-healthRouter.get("/health", healthController);
+  constructor() {
+    this.initializeRoutes();
+  }
 
-export default healthRouter;
+  private initializeRoutes() {
+    this.healthRoute.get("/health", healthController.getHealth);
+  }
+}
+
+export const healthRoutes = new HealthRoutes().healthRoute;

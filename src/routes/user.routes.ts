@@ -1,13 +1,21 @@
 import { Router } from "express";
-import { listMyPosts } from "../Modules/post/post.controller";
-import { getMe, updateMe } from "../Modules/user/user.controller";
-import { requireAuth } from "../middlewares/auth";
-import { validateNameUpdate } from "../middlewares/validate";
+import { postController } from "../Modules/post/post.controller";
+import { userController } from "../Modules/user/user.controller";
+import { authMiddleware } from "../middlewares/auth";
+import { requestValidator } from "../middlewares/validate";
 
-const userRouter = Router();
+class UserRoutes {
+  public userRoute = Router();
 
-userRouter.get("/me", requireAuth, getMe);
-userRouter.get("/me/posts", requireAuth, listMyPosts);
-userRouter.patch("/me", requireAuth, validateNameUpdate, updateMe);
+  constructor() {
+    this.initializeRoutes();
+  }
 
-export default userRouter;
+  private initializeRoutes() {
+    this.userRoute.get("/me", authMiddleware.requireAuth, userController.getMe);
+    this.userRoute.get("/me/posts", authMiddleware.requireAuth, postController.listMyPosts);
+    this.userRoute.patch("/me", authMiddleware.requireAuth, requestValidator.validateNameUpdate, userController.updateMe);
+  }
+}
+
+export const userRoutes = new UserRoutes().userRoute;

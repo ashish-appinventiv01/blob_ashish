@@ -1,29 +1,47 @@
 import cookieParser from "cookie-parser";
-import express from "express";
+import express, { type Express } from "express";
 import swaggerUi from "swagger-ui-express";
 import { openApiSpec } from "./docs/openapi";
 import { errorHandler } from "./middlewares/errorHandler";
-import { hideSecrets } from "./middlewares/hideSecrets";
-import { notFound } from "./middlewares/notFound";
-import apiRouter from "./routes";
+import { secretMiddleware } from "./middlewares/hideSecrets";
+import { notFoundMiddleware } from "./middlewares/notFound";
+import { apiRoutes } from "./routes";
 
-export const app = express();
+class App {
+  public readonly expressApp: Express = express();
 
-app.use(hideSecrets);
-app.use(express.json());
-app.use(cookieParser());
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(openApiSpec, {
-    swaggerOptions: {
-      withCredentials: true,
-    },
-  }),
-);
-app.get("/api-docs.json", (_req, res) => {
-  res.type("application/json").send(JSON.stringify(openApiSpec));
-});
-app.use(apiRouter);
-app.use(notFound);
-app.use(errorHandler);
+  constructor() {
+    this.initializeMiddlewares();
+    this.initializeRoutes();
+    this.initializeErrorHandling();
+  }
+
+  private initializeMiddlewares(): void {
+    this.expressApp.use(secretMiddleware.hide);
+    this.expressApp.use(express.json());
+    this.expressApp.use(cookieParser());
+    this.expressApp.use(
+      "/api-docs",
+      swaggerUi.serve,
+      swaggerUi.setup(openApiSpec, {
+        swaggerOptions: {
+          withCredentials: true,
+        },
+      }),
+    );
+    this.expressApp.get("/api-docs.json", (_req, res) => {
+      res.type("application/json").send(JSON.stringify(openApiSpec));
+    });
+  }
+
+  private initializeRoutes(): void {
+    this.expressApp.use(apiRoutes);
+  }
+
+  private initializeErrorHandling(): void {
+    this.expressApp.use(notFoundMiddleware.handle);
+    this.expressApp.use(errorHandler.handle);
+  }
+}
+
+export const app = new App().expressApp;

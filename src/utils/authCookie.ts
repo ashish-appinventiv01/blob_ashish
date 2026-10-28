@@ -2,22 +2,26 @@ import { CookieOptions, Response } from "express";
 import { AUTH } from "../constants/auth";
 import { config } from "../constants/config";
 
-function baseCookieOptions(): CookieOptions {
-  return {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: config.nodeEnv === "production",
-    path: "/",
-  };
+class AuthCookie {
+  private baseCookieOptions(): CookieOptions {
+    return {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: config.nodeEnv === "production",
+      path: "/",
+    };
+  }
+
+  set(res: Response, token: string): void {
+    res.cookie(AUTH.cookieName, token, {
+      ...this.baseCookieOptions(),
+      maxAge: AUTH.sessionTtlMs,
+    });
+  }
+
+  clear(res: Response): void {
+    res.clearCookie(AUTH.cookieName, this.baseCookieOptions());
+  }
 }
 
-export function setAuthCookie(res: Response, token: string): void {
-  res.cookie(AUTH.cookieName, token, {
-    ...baseCookieOptions(),
-    maxAge: AUTH.sessionTtlMs,
-  });
-}
-
-export function clearAuthCookie(res: Response): void {
-  res.clearCookie(AUTH.cookieName, baseCookieOptions());
-}
+export const authCookie = new AuthCookie();

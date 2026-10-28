@@ -1,8 +1,16 @@
 import { Router } from "express";
-import { getStatsHandler } from "../Modules/stats/stats.controller";
+import { statsController } from "../Modules/stats/stats.controller";
 
-const statsRouter = Router();
+class StatsRoutes {
+  public statsRoute = Router();
 
-statsRouter.get("/", getStatsHandler);
+  constructor() {
+    this.initializeRoutes();
+  }
 
-export default statsRouter;
+  private initializeRoutes() {
+    this.statsRoute.get("/", statsController.getStats);
+  }
+}
+
+export const statsRoutes = new StatsRoutes().statsRoute;

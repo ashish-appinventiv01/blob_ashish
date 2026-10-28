@@ -1,12 +1,21 @@
 import { Router } from "express";
-import { login, logout, signup } from "../Modules/auth/auth.controller";
-import { requireAuth } from "../middlewares/auth";
-import { validateLogin, validateSignup } from "../middlewares/validate";
+import { authController } from "../Modules/auth/auth.controller";
+import { authMiddleware } from "../middlewares/auth";
+import { loginRateLimiter } from "../middlewares/loginRateLimit";
+import { requestValidator } from "../middlewares/validate";
 
-const authRouter = Router();
+class AuthRoutes {
+  public authRoute = Router();
 
-authRouter.post("/signup", validateSignup, signup);
-authRouter.post("/login", validateLogin, login);
-authRouter.post("/logout", requireAuth, logout);
+  constructor() {
+    this.initializeRoutes();
+  }
 
-export default authRouter;
+  private initializeRoutes() {
+    this.authRoute.post("/signup", requestValidator.validateSignup, authController.signup);
+    this.authRoute.post("/login", requestValidator.validateLogin, loginRateLimiter.limit, authController.login);
+    this.authRoute.post("/logout", authMiddleware.requireAuth, authController.logout);
+  }
+}
+
+export const authRoutes = new AuthRoutes().authRoute;
