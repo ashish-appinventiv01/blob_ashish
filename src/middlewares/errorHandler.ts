@@ -1,43 +1,55 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
-import { config } from "../constants/config";
 import { MESSAGES } from "../constants/messages";
 import { AppError } from "../utils/AppError";
+import { duplicateKeyIncludes, isDuplicateKeyError } from "../utils/mongoError";
 
-function isDuplicateKeyError(err: unknown): boolean {
-  return typeof err === "object" && err !== null && "code" in err && (err as { code: unknown }).code === 11000;
+const ERROR_STATUSES = new Set([400, 401, 403, 404, 409, 500]);
+
+function sendError(res: Response, status: number, message: string): void {
+  const statusCode = ERROR_STATUSES.has(status) ? status : 500;
+  res.status(statusCode).json({ success: false, message });
+}
+
+function validationMessage(err: mongoose.Error.ValidationError): string {
+  const messages = Object.values(err.errors).map((item) => {
+    if (item.path === "password") {
+      console.log(item.message);
+      return MESSAGES.passwordLength;
+    }
+    return item.message;
+  });
+
+  return messages.join(", ") || "Validation failed";
 }
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({ success: false, message: err.message });
+    sendError(res, err.statusCode, err.message);
     return;
   }
 
   if (err instanceof SyntaxError && "body" in err) {
-    res.status(400).json({ success: false, message: MESSAGES.invalidJson });
+    sendError(res, 400, MESSAGES.invalidJson);
     return;
   }
 
   if (err instanceof mongoose.Error.ValidationError) {
-    res.status(400).json({ success: false, message: err.message });
+    sendError(res, 400, validationMessage(err));
     return;
   }
 
   if (err instanceof mongoose.Error.CastError) {
-    res.status(400).json({ success: false, message: MESSAGES.invalidId });
+    sendError(res, 400, MESSAGES.invalidId);
     return;
   }
 
   if (isDuplicateKeyError(err)) {
-    res.status(409).json({ success: false, message: MESSAGES.duplicate });
+    const message = duplicateKeyIncludes(err, "email") ? MESSAGES.emailTaken : MESSAGES.duplicate;
+    sendError(res, 409, message);
     return;
   }
 
   console.error(err);
-
-  const message =
-    config.nodeEnv === "production" || !(err instanceof Error) ? MESSAGES.internal : err.message;
-
-  res.status(500).json({ success: false, message });
+  sendError(res, 500, MESSAGES.internal);
 }

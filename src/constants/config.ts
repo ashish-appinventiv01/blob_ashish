@@ -3,8 +3,6 @@ import { MESSAGES } from "./messages";
 
 dotenv.config();
 
-const DB_NAME = "blog_ashish";
-
 function requiredEnv(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) {
@@ -23,7 +21,7 @@ export const config = {
   port,
   nodeEnv: process.env.NODE_ENV ?? "development",
   mongodbUri: requiredEnv("MONGODB_URI"),
-  dbName: DB_NAME,
+  dbName: requiredEnv("DB_NAME"),
 } as const;
 
 export { MESSAGES };

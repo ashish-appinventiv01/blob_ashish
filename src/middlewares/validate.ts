@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import { MESSAGES } from "../constants/messages";
 import { AppError } from "../utils/AppError";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type FieldSource = Record<string, unknown> | undefined;
 
@@ -31,4 +34,56 @@ export function validate(rules: ValidationRules) {
 
     next();
   };
+}
+
+export function validateSignup(req: Request, _res: Response, next: NextFunction): void {
+  const body = req.body as Record<string, unknown> | undefined;
+  const name = typeof body?.name === "string" ? body.name.trim() : "";
+  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const password = body?.password;
+
+  if (name.length < 2 || name.length > 50) {
+    next(new AppError(MESSAGES.nameLength, 400));
+    return;
+  }
+
+  if (!EMAIL_PATTERN.test(email)) {
+    next(new AppError(MESSAGES.emailInvalid, 400));
+    return;
+  }
+
+  if (typeof password !== "string" || password.length < 8) {
+    next(new AppError(MESSAGES.passwordLength, 400));
+    return;
+  }
+
+  req.body = { name, email, password };
+  next();
+}
+
+export function validateLogin(req: Request, _res: Response, next: NextFunction): void {
+  const body = req.body as Record<string, unknown> | undefined;
+  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const password = typeof body?.password === "string" ? body.password : "";
+
+  if (!email || !password) {
+    next(new AppError(MESSAGES.loginRequired, 400));
+    return;
+  }
+
+  req.body = { email, password };
+  next();
+}
+
+export function validateNameUpdate(req: Request, _res: Response, next: NextFunction): void {
+  const body = req.body as Record<string, unknown> | undefined;
+  const name = typeof body?.name === "string" ? body.name.trim() : "";
+
+  if (name.length < 2 || name.length > 50) {
+    next(new AppError(MESSAGES.nameLength, 400));
+    return;
+  }
+
+  req.body = { name };
+  next();
 }
